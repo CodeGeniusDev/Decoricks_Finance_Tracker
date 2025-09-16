@@ -44,33 +44,37 @@ export const saveLiveTrackingData = (data: LiveTrackingData): void => {
 };
 
 export const trackActivity = (activity: 'add' | 'edit' | 'delete' | 'export' | 'import'): void => {
-  const data = getLiveTrackingData();
-  const today = new Date().toISOString().split('T')[0];
+  try {
+    const data = getLiveTrackingData();
+    const today = new Date().toISOString().split('T')[0];
   
-  // Update activity counters
-  switch (activity) {
-    case 'add':
-      data.transactionsAdded++;
-      break;
-    case 'edit':
-      data.transactionsEdited++;
-      break;
-    case 'delete':
-      data.transactionsDeleted++;
-      break;
-    case 'export':
-      data.exportsPerformed++;
-      break;
-    case 'import':
-      data.importsPerformed++;
-      break;
+    // Update activity counters
+    switch (activity) {
+      case 'add':
+        data.transactionsAdded++;
+        break;
+      case 'edit':
+        data.transactionsEdited++;
+        break;
+      case 'delete':
+        data.transactionsDeleted++;
+        break;
+      case 'export':
+        data.exportsPerformed++;
+        break;
+      case 'import':
+        data.importsPerformed++;
+        break;
+    }
+  
+    // Update daily usage
+    data.dailyUsage[today] = (data.dailyUsage[today] || 0) + 1;
+    data.lastActivity = new Date().toISOString();
+  
+    saveLiveTrackingData(data);
+  } catch (error) {
+    console.error('Error tracking activity:', error);
   }
-  
-  // Update daily usage
-  data.dailyUsage[today] = (data.dailyUsage[today] || 0) + 1;
-  data.lastActivity = new Date().toISOString();
-  
-  saveLiveTrackingData(data);
 };
 
 export const initializeSession = (): void => {

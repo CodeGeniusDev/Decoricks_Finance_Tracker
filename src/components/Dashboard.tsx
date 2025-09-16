@@ -17,10 +17,13 @@ const Dashboard: React.FC<DashboardProps> = ({ transactions, dateFilter }) => {
   
   // Filter transactions based on date range
   const filteredTransactions = transactions.filter(t => {
-    const transactionDate = new Date(t.date + 'T00:00:00');
-    const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
-    return transactionDate >= startDate && transactionDate <= endDate;
+    try {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= start && transactionDate <= end;
+    } catch (error) {
+      console.error('Invalid date format:', t.date);
+      return false;
+    }
   });
 
   const totals = filteredTransactions.reduce(

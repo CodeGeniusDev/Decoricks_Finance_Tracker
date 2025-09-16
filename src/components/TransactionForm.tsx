@@ -45,12 +45,21 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.amount || !formData.category || !formData.date) return;
+    if (!formData.amount || !formData.category || !formData.date) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    
+    const amount = parseFloat(formData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid amount greater than 0.');
+      return;
+    }
 
     const transaction: Transaction = {
       id: editingTransaction?.id || generateId(),
       type: formData.type,
-      amount: parseFloat(formData.amount),
+      amount: amount,
       currency: formData.currency,
       category: formData.category,
       description: formData.description,

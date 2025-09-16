@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import { AppData } from '../types';
 import { exportToJSON, exportToCSV } from '../utils/storage';
 import { getUsageStats } from '../utils/liveTracking';
-import { getAutoDownloadSettings } from '../utils/autoDownload';
 import { Download, Upload, FileText, Database } from 'lucide-react';
 
 interface ExportImportProps {
@@ -14,7 +13,6 @@ interface ExportImportProps {
 const ExportImport: React.FC<ExportImportProps> = ({ data, onImport, onExport }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usageStats = getUsageStats();
-  const autoDownloadSettings = getAutoDownloadSettings();
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -28,14 +26,35 @@ const ExportImport: React.FC<ExportImportProps> = ({ data, onImport, onExport })
         
         // Validate the imported data structure
         if (importedData.transactions && importedData.categories) {
-          onImport(importedData);
+          // Ensure transactions have all required fields
+          const validTransactions = importedData.transactions.filter((t: any) => 
+            t.id && t.type && t.amount && t.currency && t.category && t.date
+          );
+          
+          // Ensure categories have all required fields
+          const validCategories = importedData.categories.filter((c: any) => 
+            c.id && c.name && c.type
+          );
+          
+          onImport({
+            transactions: validTransactions,
+            categories: validCategories
+          });
+          
+          alert(`Successfully imported ${validTransactions.length} transactions and ${validCategories.length} categories.`);
         } else {
           alert('Invalid file format. Please select a valid backup file.');
         }
       } catch (error) {
+        console.error('Import error:', error);
         alert('Error importing data. Please check the file format.');
       }
     };
+    
+    reader.onerror = () => {
+      alert('Error reading file. Please try again.');
+    };
+    
     reader.readAsText(file);
 
     // Reset file input
@@ -45,13 +64,23 @@ const ExportImport: React.FC<ExportImportProps> = ({ data, onImport, onExport })
   };
   
   const handleExportJSON = () => {
-    exportToJSON(data);
-    onExport('json');
+    try {
+      exportToJSON(data);
+      onExport('json');
+    } catch (error) {
+      console.error('Export JSON error:', error);
+      alert('Error exporting data. Please try again.');
+    }
   };
   
   const handleExportCSV = () => {
-    exportToCSV(data.transactions);
-    onExport('csv');
+    try {
+      exportToCSV(data.transactions);
+      onExport('csv');
+    } catch (error) {
+      console.error('Export CSV error:', error);
+      alert('Error exporting transactions. Please try again.');
+    }
   };
 
   return (
@@ -67,7 +96,7 @@ const ExportImport: React.FC<ExportImportProps> = ({ data, onImport, onExport })
           <div className="space-y-3">
             <button
               onClick={handleExportJSON}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#806351] text-white rounded-lg hover:bg-[#6b5444] transition-colors"
             >
               <Database className="h-4 w-4" />
               Export as JSON (Complete Backup)
@@ -141,29 +170,27 @@ const ExportImport: React.FC<ExportImportProps> = ({ data, onImport, onExport })
             <p className="text-lg font-semibold text-gray-900">{data.categories.length}</p>
             <p className="text-xs text-gray-500">Categories</p>
           </div>
-          
-          {/* Live Tracking Stats */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Live Usage Statistics</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-lg font-semibold text-blue-900">{usageStats.totalSessions}</p>
-                <p className="text-xs text-blue-600">Total Sessions</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-lg">
-                <p className="text-lg font-semibold text-green-900">{usageStats.totalTransactions}</p>
-                <p className="text-xs text-green-600">Total Activities</p>
-              </div>
-              <div className="bg-purple-50 p-3 rounded-lg">
-                <p className="text-lg font-semibold text-purple-900">{usageStats.averageDaily}</p>
-                <p className="text-xs text-purple-600">Daily Average</p>
-              </div>
-              <div className="bg-orange-50 p-3 rounded-lg">
-                <p className="text-lg font-semibold text-orange-900">
-                  {autoDownloadSettings.enabled ? 'ON' : 'OFF'}
-                </p>
-                <p className="text-xs text-orange-600">Auto-Backup</p>
-              </div>
+        </div>
+        
+        {/* Live Tracking Stats */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">Live Usage Statistics</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-lg font-semibold text-blue-900">{usageStats.totalSessions}</p>
+              <p className="text-xs text-blue-600">Total Sessions</p>
+            </div>
+            <div className="bg-green-50 p-3 rounded-lg">
+              <p className="text-lg font-semibold text-green-900">{usageStats.totalTransactions}</p>
+              <p className="text-xs text-green-600">Total Activities</p>
+            </div>
+            <div className="bg-purple-50 p-3 rounded-lg">
+              <p className="text-lg font-semibold text-purple-900">{usageStats.averageDaily}</p>
+              <p className="text-xs text-purple-600">Daily Average</p>
+            </div>
+            <div className="bg-orange-50 p-3 rounded-lg">
+              <p className="text-lg font-semibold text-orange-900">{usageStats.mostActiveDay}</p>
+              <p className="text-xs text-orange-600">Most Active Day</p>
             </div>
           </div>
         </div>

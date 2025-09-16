@@ -112,139 +112,115 @@ export const requestNotificationPermission = async (): Promise<boolean> => {
 };
 
 export const scheduleReminders = (): void => {
-  const settings = getNotificationSettings();
-  
-  // Clear existing reminders
   try {
-    const existingReminders = JSON.parse(localStorage.getItem('decoricks-reminders') || '[]');
-    existingReminders.forEach((id: number) => {
-      clearTimeout(id);
-      clearInterval(id);
-    });
-    localStorage.removeItem('decoricks-reminders');
-  } catch (error) {
-    console.error('Error clearing existing reminders:', error);
-  }
+    const settings = getNotificationSettings();
   
-  const reminderIds: number[] = [];
+    // Clear existing reminders
+    try {
+      const existingReminders = JSON.parse(localStorage.getItem('decoricks-reminders') || '[]');
+      existingReminders.forEach((id: number) => {
+        clearTimeout(id);
+        clearInterval(id);
+      });
+      localStorage.removeItem('decoricks-reminders');
+    } catch (error) {
+      console.error('Error clearing existing reminders:', error);
+    }
   
-  if (settings.weeklyReminders) {
-    // Schedule weekly reminder
-    const now = new Date();
-    const nextSunday = new Date(now);
-    const daysUntilSunday = now.getDay() === 0 ? 7 : 7 - now.getDay();
-    nextSunday.setDate(now.getDate() + daysUntilSunday);
-    nextSunday.setHours(9, 0, 0, 0);
+    const reminderIds: number[] = [];
+  
+    if (settings.weeklyReminders) {
+      // Schedule weekly reminder
+      const now = new Date();
+      const nextSunday = new Date(now);
+      const daysUntilSunday = now.getDay() === 0 ? 7 : 7 - now.getDay();
+      nextSunday.setDate(now.getDate() + daysUntilSunday);
+      nextSunday.setHours(9, 0, 0, 0);
     
-    const timeUntilSunday = nextSunday.getTime() - now.getTime();
+      const timeUntilSunday = nextSunday.getTime() - now.getTime();
     
-    // For immediate testing, trigger after 5 seconds
-    const demoTimeout = 5000;
-    
-    // Demo reminder for immediate testing
-    const demoReminderId = window.setTimeout(() => {
-      addNotification(
-        'Weekly Finance Review',
-        'Time to review your weekly income and expenses for Decoricks! (Demo notification)',
-        'reminder'
-      );
-    }, demoTimeout);
-    reminderIds.push(demoReminderId);
-    
-    // Actual weekly reminder
-    if (timeUntilSunday > 0) {
-      const weeklyReminderId = window.setTimeout(() => {
-        addNotification(
-          'Weekly Finance Review',
-          'Time to review your weekly income and expenses for Decoricks!',
-          'reminder'
-        );
-        
-        // Set up recurring weekly reminder
-        const recurringId = window.setInterval(() => {
+      // Actual weekly reminder
+      if (timeUntilSunday > 0) {
+        const weeklyReminderId = window.setTimeout(() => {
           addNotification(
             'Weekly Finance Review',
             'Time to review your weekly income and expenses for Decoricks!',
             'reminder'
           );
-        }, 7 * 24 * 60 * 60 * 1000); // Every 7 days
         
-        // Store recurring reminder ID
-        try {
-          const currentReminders = JSON.parse(localStorage.getItem('decoricks-reminders') || '[]');
-          currentReminders.push(recurringId);
-          localStorage.setItem('decoricks-reminders', JSON.stringify(currentReminders));
-        } catch (error) {
-          console.error('Error storing recurring reminder:', error);
-        }
-      }, timeUntilSunday);
-      reminderIds.push(weeklyReminderId);
-    }
-  }
-  
-  if (settings.monthlyReminders) {
-    // Schedule monthly reminder
-    const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 10, 0, 0, 0);
-    const timeUntilNextMonth = nextMonth.getTime() - now.getTime();
-    
-    // For immediate testing, trigger after 10 seconds
-    const demoTimeout = 10000;
-    
-    // Demo reminder for immediate testing
-    const demoReminderId = window.setTimeout(() => {
-      addNotification(
-        'Monthly Finance Summary',
-        'Review your monthly financial performance and plan for the upcoming month! (Demo notification)',
-        'reminder'
-      );
-    }, demoTimeout);
-    reminderIds.push(demoReminderId);
-    
-    // Actual monthly reminder
-    if (timeUntilNextMonth > 0) {
-      const monthlyReminderId = window.setTimeout(() => {
-        addNotification(
-          'Monthly Finance Summary',
-          'Review your monthly financial performance and plan for the upcoming month!',
-          'reminder'
-        );
-        
-        // Set up recurring monthly reminder
-        const recurringId = window.setInterval(() => {
-          const now = new Date();
-          const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 10, 0, 0, 0);
-          const timeUntilNext = nextMonth.getTime() - now.getTime();
-          
-          if (timeUntilNext <= 24 * 60 * 60 * 1000) { // Within 24 hours of 1st
+          // Set up recurring weekly reminder
+          const recurringId = window.setInterval(() => {
             addNotification(
-              'Monthly Finance Summary',
-              'Review your monthly financial performance and plan for the upcoming month!',
+              'Weekly Finance Review',
+              'Time to review your weekly income and expenses for Decoricks!',
               'reminder'
             );
-          }
-        }, 24 * 60 * 60 * 1000); // Check daily
+          }, 7 * 24 * 60 * 60 * 1000); // Every 7 days
         
-        // Store recurring reminder ID
-        try {
-          const currentReminders = JSON.parse(localStorage.getItem('decoricks-reminders') || '[]');
-          currentReminders.push(recurringId);
-          localStorage.setItem('decoricks-reminders', JSON.stringify(currentReminders));
-        } catch (error) {
-          console.error('Error storing recurring reminder:', error);
-        }
-      }, timeUntilNextMonth);
-      reminderIds.push(monthlyReminderId);
+          // Store recurring reminder ID
+          try {
+            const currentReminders = JSON.parse(localStorage.getItem('decoricks-reminders') || '[]');
+            currentReminders.push(recurringId);
+            localStorage.setItem('decoricks-reminders', JSON.stringify(currentReminders));
+          } catch (error) {
+            console.error('Error storing recurring reminder:', error);
+          }
+        }, timeUntilSunday);
+        reminderIds.push(weeklyReminderId);
+      }
     }
-  }
   
-  try {
-    localStorage.setItem('decoricks-reminders', JSON.stringify(reminderIds));
+    if (settings.monthlyReminders) {
+      // Schedule monthly reminder
+      const now = new Date();
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 10, 0, 0, 0);
+      const timeUntilNextMonth = nextMonth.getTime() - now.getTime();
+    
+      // Actual monthly reminder
+      if (timeUntilNextMonth > 0) {
+        const monthlyReminderId = window.setTimeout(() => {
+          addNotification(
+            'Monthly Finance Summary',
+            'Review your monthly financial performance and plan for the upcoming month!',
+            'reminder'
+          );
+        
+          // Set up recurring monthly reminder
+          const recurringId = window.setInterval(() => {
+            const now = new Date();
+            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1, 10, 0, 0, 0);
+            const timeUntilNext = nextMonth.getTime() - now.getTime();
+          
+            if (timeUntilNext <= 24 * 60 * 60 * 1000) { // Within 24 hours of 1st
+              addNotification(
+                'Monthly Finance Summary',
+                'Review your monthly financial performance and plan for the upcoming month!',
+                'reminder'
+              );
+            }
+          }, 24 * 60 * 60 * 1000); // Check daily
+        
+          // Store recurring reminder ID
+          try {
+            const currentReminders = JSON.parse(localStorage.getItem('decoricks-reminders') || '[]');
+            currentReminders.push(recurringId);
+            localStorage.setItem('decoricks-reminders', JSON.stringify(currentReminders));
+          } catch (error) {
+            console.error('Error storing recurring reminder:', error);
+          }
+        }, timeUntilNextMonth);
+        reminderIds.push(monthlyReminderId);
+      }
+    }
+  
+    try {
+      localStorage.setItem('decoricks-reminders', JSON.stringify(reminderIds));
+    } catch (error) {
+      console.error('Error saving reminder IDs:', error);
+    }
   } catch (error) {
-    console.error('Error saving reminder IDs:', error);
+    console.error('Error scheduling reminders:', error);
   }
-  
-  console.log(`Scheduled ${reminderIds.length} reminders. Settings:`, settings);
 };
 
 export const markNotificationAsRead = (id: string): void => {

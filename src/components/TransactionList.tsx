@@ -28,7 +28,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
   });
 
   const sortedTransactions = filteredTransactions.sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
+    {
+      try {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      } catch (error) {
+        console.error('Date sorting error:', error);
+        return 0;
+      }
+    }
   );
 
   const uniqueCategories = [...new Set(transactions.map(t => t.category))];

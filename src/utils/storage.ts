@@ -58,6 +58,12 @@ export const loadData = (): AppData => {
 
 export const saveData = (data: AppData): void => {
   try {
+    // Validate data before saving
+    if (!data || !Array.isArray(data.transactions) || !Array.isArray(data.categories)) {
+      console.error('Invalid data structure for saving');
+      return;
+    }
+    
     // Save to primary storage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     

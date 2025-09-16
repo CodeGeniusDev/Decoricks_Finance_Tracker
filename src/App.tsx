@@ -43,9 +43,6 @@ const App: React.FC = () => {
     // Initialize live tracking
     initializeSession();
     
-    // Initialize auto-download system
-    initializeAutoDownload(loadedData);
-    
     const settings = getNotificationSettings();
     setNotificationSettings(settings);
     
@@ -57,30 +54,10 @@ const App: React.FC = () => {
       scheduleReminders();
     });
     
-    // Add welcome notification
-    setTimeout(() => {
-      addNotification(
-        'Welcome to Decoricks Finance App',
-        'Your home decor business finance tracker is ready! Start by adding your first transaction.',
-        'info'
-      );
-      setNotifications(getNotifications());
-    }, 1000);
-    
     // Set up periodic notification refresh
     const notificationInterval = setInterval(() => {
       const currentNotifications = getNotifications();
       setNotifications(currentNotifications);
-      
-      // Check for auto-download every time notifications refresh
-      if (shouldAutoDownload()) {
-        triggerAutoDownload(data);
-        addNotification(
-          'Auto-Backup Completed',
-          'Your financial data has been automatically downloaded as a backup file.',
-          'success'
-        );
-      }
     }, 2000);
     
     return () => {
@@ -130,25 +107,9 @@ const App: React.FC = () => {
     // Track activity
     trackActivity(isEditing ? 'edit' : 'add');
     
-    // Add notification for transaction events
-    if (notificationSettings.transactionNotifications) {
-      if (editingTransaction) {
-        addNotification(
-          'Transaction Updated',
-          `${transaction.type === 'income' ? 'Income' : 'Expense'} of ${transaction.currency} ${transaction.amount.toLocaleString()} in "${transaction.category}" updated successfully.`,
-          'success'
-        );
-      } else {
-        addNotification(
-          'Transaction Added',
-          `New ${transaction.type} of ${transaction.currency} ${transaction.amount.toLocaleString()} recorded in "${transaction.category}".`,
-          'success'
-        );
-      }
-      // Force immediate notification update
-      setTimeout(() => {
-        setNotifications(getNotifications());
-      }, 100);
+    // Show simple toast notification only for new transactions
+    if (!editingTransaction && notificationSettings.transactionNotifications) {
+      showToast(`${transaction.type === 'income' ? '+' : '-'}${transaction.currency} ${transaction.amount.toLocaleString()} added`);
     }
     
     if (editingTransaction) {
@@ -170,34 +131,12 @@ const App: React.FC = () => {
       
       // Track activity
       trackActivity('delete');
-      
-      if (notificationSettings.transactionNotifications) {
-        addNotification(
-          'Transaction Deleted',
-          'Transaction has been removed from your financial records.',
-          'warning'
-        );
-        setTimeout(() => {
-          setNotifications(getNotifications());
-        }, 100);
-      }
     }
   };
 
   const handleAddCategory = (category: Category) => {
     const newData = { ...data, categories: [...data.categories, category] };
     handleSaveData(newData);
-    
-    if (notificationSettings.transactionNotifications) {
-      addNotification(
-        'Category Added',
-        `Custom ${category.type} category "${category.name}" created successfully.`,
-        'info'
-      );
-      setTimeout(() => {
-        setNotifications(getNotifications());
-      }, 100);
-    }
   };
 
   const handleCancelEdit = () => {
@@ -210,33 +149,11 @@ const App: React.FC = () => {
     
     // Track activity
     trackActivity('import');
-    
-    if (notificationSettings.transactionNotifications) {
-      addNotification(
-        'Data Imported',
-        `Backup restored: ${importedData.transactions.length} transactions and ${importedData.categories.length} categories imported.`,
-        'success'
-      );
-      setTimeout(() => {
-        setNotifications(getNotifications());
-      }, 100);
-    }
   };
   
   const handleExport = (type: 'json' | 'csv') => {
     // Track activity
     trackActivity('export');
-    
-    if (notificationSettings.transactionNotifications) {
-      addNotification(
-        'Data Exported',
-        `Financial data exported as ${type.toUpperCase()} file. Download should start automatically.`,
-        'success'
-      );
-      setTimeout(() => {
-        setNotifications(getNotifications());
-      }, 100);
-    }
   };
   
   const handleNotificationSettingsChange = (newSettings: NotificationSettings) => {
@@ -245,22 +162,32 @@ const App: React.FC = () => {
     
     // Clear existing reminders and set new ones
     scheduleReminders();
-    
-    addNotification(
-      'Settings Updated',
-      `Notification preferences updated: Weekly reminders ${newSettings.weeklyReminders ? 'enabled' : 'disabled'}, Monthly reminders ${newSettings.monthlyReminders ? 'enabled' : 'disabled'}, Transaction notifications ${newSettings.transactionNotifications ? 'enabled' : 'disabled'}.`,
-      'info'
-    );
-    
-    // Force immediate notification update
-    setTimeout(() => {
-      setNotifications(getNotifications());
-    }, 100);
   };
   
   const unreadCount = notifications.filter(n => !n.read).length;
   const usageStats = getUsageStats();
-  const autoDownloadSettings = getAutoDownloadSettings();
+  
+  // Toast notification function
+  const showToast = (message: string) => {
+    try {
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-4 right-4 bg-[#806351] text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+    
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+          if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+          }
+        }, 300);
+      }, 2000);
+    } catch (error) {
+      console.error('Error showing toast:', error);
+    }
+  };
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -289,9 +216,6 @@ const App: React.FC = () => {
             <div className="flex items-center gap-2 sm:gap-4">
               <div className="text-xs sm:text-sm text-gray-500 hidden md:block">
                 {data.transactions.length} transactions recorded
-              </div>
-              <div className="text-xs text-gray-400 hidden lg:block">
-                Next backup: {formatNextDownloadTime()}
               </div>
               <button
                 onClick={() => setShowNotifications(true)}
