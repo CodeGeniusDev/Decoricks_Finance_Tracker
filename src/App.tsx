@@ -107,9 +107,12 @@ const App: React.FC = () => {
     // Track activity
     trackActivity(isEditing ? 'edit' : 'add');
     
-    // Show simple toast notification only for new transactions
-    if (!editingTransaction && notificationSettings.transactionNotifications) {
-      showToast(`${transaction.type === 'income' ? '+' : '-'}${transaction.currency} ${transaction.amount.toLocaleString()} added`);
+    // Show toast notification for all transactions (new and edited)
+    if (notificationSettings.transactionNotifications) {
+      const action = isEditing ? 'updated' : 'added';
+      const sign = transaction.type === 'income' ? '+' : '-';
+      const typeLabel = transaction.type === 'income' ? 'Income' : 'Expense';
+      showToast(`${typeLabel} ${action}: ${sign}${transaction.currency} ${transaction.amount.toLocaleString()}`);
     }
     
     if (editingTransaction) {
@@ -137,6 +140,11 @@ const App: React.FC = () => {
   const handleAddCategory = (category: Category) => {
     const newData = { ...data, categories: [...data.categories, category] };
     handleSaveData(newData);
+    
+    // Show toast notification for category addition
+    if (notificationSettings.transactionNotifications) {
+      showToast(`Category added: ${category.name} (${category.type})`);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -149,11 +157,22 @@ const App: React.FC = () => {
     
     // Track activity
     trackActivity('import');
+    
+    // Show toast notification for import
+    if (notificationSettings.transactionNotifications) {
+      showToast(`Data imported: ${importedData.transactions.length} transactions, ${importedData.categories.length} categories`);
+    }
   };
   
   const handleExport = (type: 'json' | 'csv') => {
     // Track activity
     trackActivity('export');
+    
+    // Show toast notification for export
+    if (notificationSettings.transactionNotifications) {
+      const formatLabel = type.toUpperCase();
+      showToast(`Data exported as ${formatLabel} file`);
+    }
   };
   
   const handleNotificationSettingsChange = (newSettings: NotificationSettings) => {
@@ -171,19 +190,25 @@ const App: React.FC = () => {
   const showToast = (message: string) => {
     try {
       const toast = document.createElement('div');
-      toast.className = 'fixed top-4 right-4 bg-[#806351] text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm';
+      toast.className = 'fixed top-4 right-4 bg-[#806351] text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm font-medium transform transition-all duration-300 ease-in-out';
       toast.textContent = message;
+      toast.style.transform = 'translateX(100%)';
       document.body.appendChild(toast);
-    
+      
+      // Animate in
       setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
+        toast.style.transform = 'translateX(0)';
+      }, 10);
+      
+      // Animate out and remove
+      setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
         setTimeout(() => {
           if (document.body.contains(toast)) {
             document.body.removeChild(toast);
           }
         }, 300);
-      }, 2000);
+      }, 3000);
     } catch (error) {
       console.error('Error showing toast:', error);
     }
