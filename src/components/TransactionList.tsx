@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from 'react';
 import { Transaction } from '../types';
 import { formatCurrency } from '../utils/dateUtils';

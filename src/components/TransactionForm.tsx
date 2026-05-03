@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useEffect } from 'react';
 import { Transaction, Category } from '../types';
 import { generateId } from '../utils/storage';

@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { AppNotification } from '../utils/notifications';
 import { Bell, X, CheckCircle, Info, AlertTriangle, Clock } from 'lucide-react';

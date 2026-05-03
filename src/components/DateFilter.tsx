@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { DateRangeFilter } from '../types';
 import { Calendar } from 'lucide-react';

@@ -76,6 +76,15 @@ const App: React.FC = () => {
   }, []);
 
   const handleSaveData = (newData: AppData) => {
+    console.log('handleSaveData called with:', {
+      transactionCount: newData.transactions.length,
+      categoryCount: newData.categories.length,
+      transactionTypes: newData.transactions.reduce((acc, t) => {
+        acc[t.type] = (acc[t.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    });
+
     setData(newData);
     saveData(newData);
     
@@ -90,6 +99,8 @@ const App: React.FC = () => {
       }));
       // Session storage as additional backup
       sessionStorage.setItem('decoricks-finance-session', JSON.stringify(newData));
+      
+      console.log('Data saved to all storage methods');
     } catch (error) {
       console.error('Error in data persistence:', error);
     }
@@ -153,7 +164,34 @@ const App: React.FC = () => {
   };
 
   const handleImport = (importedData: AppData) => {
-    handleSaveData(importedData);
+    console.log('Import function called with:', {
+      importedTransactions: importedData.transactions.length,
+      importedCategories: importedData.categories.length,
+      currentTransactions: data.transactions.length,
+      currentCategories: data.categories.length
+    });
+
+    // Merge imported data with existing data instead of replacing it
+    const mergedData: AppData = {
+      transactions: [...data.transactions, ...importedData.transactions],
+      categories: [
+        ...data.categories, 
+        ...importedData.categories.filter(cat => 
+          !data.categories.some(existingCat => existingCat.id === cat.id)
+        )
+      ]
+    };
+
+    console.log('Merged data created:', {
+      totalTransactions: mergedData.transactions.length,
+      totalCategories: mergedData.categories.length,
+      transactionTypes: mergedData.transactions.reduce((acc, t) => {
+        acc[t.type] = (acc[t.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    });
+    
+    handleSaveData(mergedData);
     
     // Track activity
     trackActivity('import');
@@ -290,7 +328,10 @@ const App: React.FC = () => {
         {/* Tab Content */}
         <div>
           {activeTab === 'dashboard' && (
-            <Dashboard transactions={data.transactions} dateFilter={dateFilter} />
+            <Dashboard 
+              key={`dashboard-${data.transactions.length}-${JSON.stringify(data.transactions).slice(0, 100)}`} 
+              transactions={data.transactions} 
+            />
           )}
           
           {activeTab === 'add' && (

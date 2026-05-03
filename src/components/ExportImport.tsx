@@ -1,3 +1,4 @@
+"use client"
 import React, { useRef } from 'react';
 import { AppData } from '../types';
 import { exportToJSON, exportToCSV } from '../utils/storage';
