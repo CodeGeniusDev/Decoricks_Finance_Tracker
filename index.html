@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#3B82F6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Decoricks Finance" />
+    <link rel="icon" type="image/png" href="https://cdn.shopify.com/s/files/1/0689/8499/5993/files/Decoricks_Logo_D_sm_small.png" />
+    <title>Decoricks Finance Tracker App</title>
+    <style>
+      /* Prevent zoom on input focus on iOS */
+      @media screen and (-webkit-min-device-pixel-ratio: 0) {
+        select, textarea, input[type="text"], input[type="password"], 
+        input[type="datetime"], input[type="datetime-local"], 
+        input[type="date"], input[type="month"], input[type="time"], 
+        input[type="week"], input[type="number"], input[type="email"], 
+        input[type="url"] {
+          font-size: 16px !important;
+        }
+      }
+      
+      /* Loading screen */
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f9fafb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      
+      .rounded-full {
+        border-radius: 50%;
+      }
+      
+      .h-12 { height: 3rem; }
+      .w-12 { width: 3rem; }
+      .border-b-2 { border-bottom-width: 2px; }
+      .mx-auto { margin-left: auto; margin-right: auto; }
+      .mb-4 { margin-bottom: 1rem; }
+      .text-center { text-align: center; }
+      .text-gray-600 { color: #4b5563; }
+    </style>
+  </head>
+  <body>
+    <div id="loading">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#806351] mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading Decoricks Finance...</p>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Hide loading screen when app loads
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loading = document.getElementById('loading');
+          if (loading) {
+            loading.style.opacity = '0';
+            loading.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => loading.remove(), 300);
+          }
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
